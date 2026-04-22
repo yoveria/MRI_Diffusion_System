@@ -1,58 +1,95 @@
-﻿@tailwind base;
+﻿@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;600;700&family=Noto+Serif+SC:wght@600;700&display=swap");
+
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --bg-carbon: #0c0f14;
-  --bg-graphite: #121721;
-  --bg-midnight: #192131;
+  --bg: #F4F8FB;
+  --surface: #FFFFFF;
+  --text: #0F1F2E;
+  --muted: #5F7082;
+  --primary: #0E6BA8;
+  --secondary: #2F8F9D;
+  --accent: #2D9D78;
+  --border: #D9E3EC;
 
-  --card-base: rgba(27, 34, 47, 0.76);
-  --card-edge: rgba(204, 218, 238, 0.19);
-  --card-edge-soft: rgba(204, 218, 238, 0.12);
+  --font-sans: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-serif: "Noto Serif SC", "Songti SC", serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
 
-  --ink-main: #edf2fa;
-  --ink-soft: #ced7e6;
-  --ink-muted: #a2afc2;
-  --ink-dim: #8694aa;
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
 
-  --accent-cyan: #4ea3ff;
-  --accent-ice: #7cc4ff;
-  --accent-teal: #67c4d6;
-  --accent-violet: #8f98ff;
-  --accent-amber: #f7b15c;
-  --accent-rose: #f3a2bd;
+  --radius-card: 16px;
+  --shadow-soft: 0 14px 36px rgba(15, 31, 46, 0.08);
 }
 
 * {
   box-sizing: border-box;
 }
 
-html,
-body,
-#root {
-  min-height: 100%;
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   margin: 0;
-  color: var(--ink-main);
-  font-family: 'SF Pro Display', 'SF Pro Text', 'PingFang SC', 'Helvetica Neue', 'Inter', Helvetica, Arial, sans-serif;
-  background:
-    radial-gradient(880px 460px at 10% -8%, rgba(92, 122, 168, 0.19), transparent 76%),
-    radial-gradient(740px 400px at 96% -8%, rgba(101, 124, 167, 0.17), transparent 78%),
-    radial-gradient(720px 340px at 52% 116%, rgba(73, 93, 129, 0.15), transparent 80%),
-    linear-gradient(170deg, var(--bg-carbon), var(--bg-graphite) 46%, var(--bg-midnight) 100%);
-  background-attachment: fixed;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
-img {
-  user-select: none;
-  -webkit-user-drag: none;
+#root {
+  min-height: 100vh;
 }
 
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
+img {
+  max-width: 100%;
+  display: block;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.bg-imaging-gradient {
+  background:
+    radial-gradient(1200px 540px at -8% -12%, rgba(14, 107, 168, 0.18), transparent 58%),
+    radial-gradient(960px 520px at 110% -4%, rgba(47, 143, 157, 0.16), transparent 62%),
+    radial-gradient(720px 420px at 50% 108%, rgba(45, 157, 120, 0.12), transparent 68%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(244, 248, 251, 1));
+}
+
+.diffusion-wave {
+  background-image: repeating-linear-gradient(
+    120deg,
+    transparent 0,
+    transparent 12px,
+    rgba(14, 107, 168, 0.06) 12px,
+    rgba(14, 107, 168, 0.06) 13px
+  );
+}
+
+.rounded-card {
+  border-radius: var(--radius-card);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
 }
