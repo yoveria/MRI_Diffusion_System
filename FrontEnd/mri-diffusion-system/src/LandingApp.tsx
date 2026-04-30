@@ -1,9 +1,9 @@
 ﻿import { useCallback } from "react";
 import { Features } from "./components/LandingFeatures";
 import { FooterCTA } from "./components/LandingFooterCTA";
-import { Guide } from "./components/LandingGuide";
 import { Header } from "./components/LandingHeader";
 import { Hero } from "./components/LandingHero";
+import { Reliability } from "./components/LandingReliability";
 import { Scenarios } from "./components/LandingScenarios";
 import { DemoWorkbench } from "./components/demo/DemoWorkbench";
 import { navItems, type SectionId } from "./constants/site";
@@ -42,6 +42,10 @@ const App = () => {
     scrollToId("demo");
   }, [scrollToId]);
 
+  const handleShowReliability = useCallback(() => {
+    scrollToId("reliability");
+  }, [scrollToId]);
+
   return (
     <div className="min-h-screen bg-bg text-text">
       <Header
@@ -52,14 +56,18 @@ const App = () => {
       />
 
       <main className="relative mx-auto w-full max-w-6xl space-y-20 px-4 pb-16 pt-24 md:px-6 md:pt-28">
-        <Hero onPrimaryAction={handleStartExperience} onSecondaryAction={() => scrollToSection("guide")} />
+        <Hero onPrimaryAction={handleStartExperience} onSecondaryAction={() => scrollToSection("reliability")} />
         <Features />
+        <Reliability />
         <Scenarios />
-        <Guide onPrimaryAction={handleStartExperience} />
         <DemoWorkbench />
       </main>
 
-      <FooterCTA onPrimaryAction={handleStartExperience} onNavClick={scrollToSection} />
+      <FooterCTA
+        onPrimaryAction={handleStartExperience}
+        onSecondaryAction={handleShowReliability}
+        onNavClick={scrollToSection}
+      />
     </div>
   );
 };

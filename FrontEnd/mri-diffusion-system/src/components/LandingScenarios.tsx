@@ -5,7 +5,7 @@ import teachingImage from "../figure/教学.jpg";
 import { scenarioItems, scenarioPathItems } from "../constants/site";
 import { Reveal } from "./Reveal";
 
-const scenarioImages = [teachingImage, researchImage, preprocessImage];
+const scenarioImages = [preprocessImage, teachingImage, researchImage, preprocessImage];
 
 export const Scenarios = () => {
   return (
@@ -16,12 +16,12 @@ export const Scenarios = () => {
           应用场景
         </h2>
         <p className="max-w-4xl text-[16px] leading-[1.82] text-muted">
-          围绕脑 MRI 模态缺失问题，面向教学展示、科研验证与智能影像处理辅助等多类使用需求，提供更直观、更完整的生成体验。
+          以脑肿瘤MRI模态补全为核心，拓展至辅助观察、教学展示、科研验证和下游任务分析。
         </p>
       </Reveal>
 
       <Reveal delay={0.06}>
-        <div className="grid gap-4 lg:grid-cols-3">
+        <div className="grid gap-4 lg:grid-cols-2">
           {scenarioItems.map((scenario, index) => (
             <article key={scenario.title} className="h-full rounded-card border border-border bg-surface p-6 shadow-soft">
               <p className="text-[12px] font-medium tracking-[0.01em] text-secondary">{scenario.sceneLabel}</p>
@@ -30,9 +30,9 @@ export const Scenarios = () => {
                 <img
                   src={scenarioImages[index]}
                   alt={`${scenario.title}场景示意图`}
-                  className="mx-auto h-auto max-h-[220px] w-auto max-w-full object-contain"
-                />
-              </div>
+                    className="mx-auto h-auto max-h-[220px] w-auto max-w-full object-contain"
+                  />
+                </div>
 
               <h3 className="mt-4 text-[24px] font-semibold leading-[1.35] text-text">{scenario.title}</h3>
               <p className="mt-3 rounded-[14px] border border-border bg-bg px-4 py-3 text-[14px] leading-7 text-muted">
