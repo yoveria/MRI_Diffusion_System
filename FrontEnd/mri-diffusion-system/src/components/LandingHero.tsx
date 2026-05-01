@@ -1,4 +1,4 @@
-import { ArrowRight, CheckCircle2, PlayCircle, UploadCloud, Workflow } from "lucide-react";
+﻿import { ArrowRight, CheckCircle2, PlayCircle, UploadCloud, Workflow } from "lucide-react";
 import t1Figure from "../figure/T1.png";
 import t2Figure from "../figure/T2.png";
 import { flowSteps, heroBadge, heroSubtitle, heroTitle, valueCards } from "../constants/site";
@@ -67,7 +67,7 @@ export const Hero = ({ onPrimaryAction, onSecondaryAction }: HeroProps) => {
             <article className="rounded-card border border-border bg-surface/95 p-4 shadow-soft lg:p-5" aria-label="输入输出示意">
               <div className="flex items-center justify-between rounded-[12px] border border-border bg-bg px-3 py-2">
                 <p className="text-[13px] font-semibold text-text">源模态输入与目标生成</p>
-                <span className="font-mono text-[12px] text-secondary">T1 → 生成T2</span>
+                <span className="font-mono text-[12px] text-secondary">T1 -&gt; 生成T2</span>
               </div>
 
               <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
@@ -89,7 +89,7 @@ export const Hero = ({ onPrimaryAction, onSecondaryAction }: HeroProps) => {
                   <p className="text-[12px] font-medium text-secondary">生成目标模态</p>
                   <p className="mt-1 text-[11px] text-muted">生成T2</p>
                   <div className="mx-auto mt-2 aspect-square w-full max-w-[172px] overflow-hidden rounded-[8px] border border-border bg-[#0f172a] p-1.5">
-                    <img src={t2Figure} alt="生成目标模态 生成T2" className="h-full w-full object-contain" />
+                    <img src={t2Figure} alt="AI生成目标模态 生成T2" className="h-full w-full object-contain" />
                   </div>
                   <p className="mt-2 text-[12px] text-muted">补充缺失模态视角</p>
                 </article>
@@ -157,23 +157,6 @@ export const Hero = ({ onPrimaryAction, onSecondaryAction }: HeroProps) => {
               </article>
             ))}
           </div>
-        </section>
-      </Reveal>
-
-      <Reveal delay={0.16}>
-        <section className="flex flex-col gap-4 rounded-card border border-border bg-surface p-6 shadow-soft md:flex-row md:items-center md:justify-between" aria-label="在线体验引导区">
-          <div>
-            <h2 className="font-serif text-[30px] font-semibold leading-[1.3] text-text">开始体验AI模态补全</h2>
-            <p className="mt-2 text-[15px] leading-7 text-muted">上传单模态脑MRI图像，查看目标模态生成与多模态对照效果。</p>
-          </div>
-          <button
-            type="button"
-            onClick={onPrimaryAction}
-            className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-[15px] font-semibold text-surface shadow-soft transition duration-200 hover:-translate-y-0.5 hover:bg-secondary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-          >
-            立即体验
-            <ArrowRight size={16} />
-          </button>
         </section>
       </Reveal>
     </section>

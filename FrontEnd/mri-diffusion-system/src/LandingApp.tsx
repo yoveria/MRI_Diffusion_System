@@ -1,4 +1,4 @@
-﻿import { useCallback } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Features } from "./components/LandingFeatures";
 import { FooterCTA } from "./components/LandingFooterCTA";
 import { Header } from "./components/LandingHeader";
@@ -6,68 +6,77 @@ import { Hero } from "./components/LandingHero";
 import { Reliability } from "./components/LandingReliability";
 import { Scenarios } from "./components/LandingScenarios";
 import { DemoWorkbench } from "./components/demo/DemoWorkbench";
-import { navItems, type SectionId } from "./constants/site";
-import { useScrollSpy } from "./hooks/useScrollSpy";
+import { ROUTE_NAV_ITEMS, ROUTE_PATHS, pathToRouteKey, type RouteKey } from "./constants/routes";
 
-const sectionIds: SectionId[] = navItems.map((item) => item.id);
+const setPagePath = (path: string) => {
+  const currentPath = window.location.pathname;
+  if (currentPath === path) {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    return;
+  }
+
+  window.history.pushState({}, "", path);
+  window.scrollTo({ top: 0, behavior: "auto" });
+};
+
+const PageContent = ({ routeKey, onPrimaryAction, onSecondaryAction }: { routeKey: RouteKey; onPrimaryAction: () => void; onSecondaryAction: () => void }) => {
+  switch (routeKey) {
+    case "home":
+      return <Hero onPrimaryAction={onPrimaryAction} onSecondaryAction={onSecondaryAction} />;
+    case "capabilities":
+      return <Features />;
+    case "reliability":
+      return <Reliability />;
+    case "scenarios":
+      return <Scenarios />;
+    case "demo":
+      return <DemoWorkbench />;
+    default:
+      return <Hero onPrimaryAction={onPrimaryAction} onSecondaryAction={onSecondaryAction} />;
+  }
+};
 
 const App = () => {
-  const { activeSection, scrollToSection } = useScrollSpy<SectionId>({
-    sectionIds,
-    headerSelector: "#site-header",
-  });
+  const [routeKey, setRouteKey] = useState<RouteKey>(() => pathToRouteKey(window.location.pathname));
 
-  const scrollToId = useCallback(
-    (id: string) => {
-      if (sectionIds.includes(id as SectionId)) {
-        scrollToSection(id as SectionId);
-        return;
-      }
+  useEffect(() => {
+    const onPopState = () => setRouteKey(pathToRouteKey(window.location.pathname));
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
 
-      const target = document.getElementById(id);
-      if (!target) {
-        return;
-      }
-
-      const header = document.querySelector<HTMLElement>("#site-header");
-      const offset = (header?.getBoundingClientRect().height ?? 88) + 12;
-      const targetTop = target.getBoundingClientRect().top + window.scrollY - offset;
-      window.history.replaceState(null, "", `#${id}`);
-      window.scrollTo({ top: targetTop, behavior: "smooth" });
-    },
-    [scrollToSection],
-  );
+  const navigate = useCallback((id: RouteKey) => {
+    const nextPath = ROUTE_PATHS[id];
+    setPagePath(nextPath);
+    setRouteKey(id);
+  }, []);
 
   const handleStartExperience = useCallback(() => {
-    scrollToId("demo");
-  }, [scrollToId]);
+    navigate("demo");
+  }, [navigate]);
 
   const handleShowReliability = useCallback(() => {
-    scrollToId("reliability");
-  }, [scrollToId]);
+    navigate("reliability");
+  }, [navigate]);
+
+  const pageTitle = useMemo(() => {
+    const current = ROUTE_NAV_ITEMS.find((item) => item.id === routeKey);
+    return current?.label ?? "首页";
+  }, [routeKey]);
+
+  useEffect(() => {
+    document.title = `${pageTitle} | MRI Diffusion System`;
+  }, [pageTitle]);
 
   return (
     <div className="min-h-screen bg-bg text-text">
-      <Header
-        navItems={navItems}
-        activeSection={activeSection}
-        onNavClick={scrollToSection}
-        onPrimaryAction={handleStartExperience}
-      />
+      <Header navItems={ROUTE_NAV_ITEMS} activeRoute={routeKey} onNavigate={navigate} onPrimaryAction={handleStartExperience} />
 
       <main className="relative mx-auto w-full max-w-6xl space-y-20 px-4 pb-16 pt-24 md:px-6 md:pt-28">
-        <Hero onPrimaryAction={handleStartExperience} onSecondaryAction={() => scrollToSection("reliability")} />
-        <Features />
-        <Reliability />
-        <Scenarios />
-        <DemoWorkbench />
+        <PageContent routeKey={routeKey} onPrimaryAction={handleStartExperience} onSecondaryAction={handleShowReliability} />
       </main>
 
-      <FooterCTA
-        onPrimaryAction={handleStartExperience}
-        onSecondaryAction={handleShowReliability}
-        onNavClick={scrollToSection}
-      />
+      <FooterCTA onPrimaryAction={handleStartExperience} onSecondaryAction={handleShowReliability} onNavClick={navigate} />
     </div>
   );
 };

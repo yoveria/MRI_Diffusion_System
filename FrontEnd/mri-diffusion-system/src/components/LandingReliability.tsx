@@ -1,14 +1,85 @@
-import compareFigure from "../figure/compare.png";
-import t1Figure from "../figure/T1.png";
-import t2Figure from "../figure/T2.png";
-import {
-  reliabilityDatasets,
-  reliabilityHealthLines,
-  reliabilityMetrics,
-  reliabilityRuntime,
-  reliabilitySubtitle,
-} from "../constants/site";
+﻿import bratsDatasetFigure from "../figure/BraTS2021.png";
+import ixiDatasetFigure from "../figure/IXI.png";
+import visualCompareFigure from "../figure/可视化结果对比.png";
 import { Reveal } from "./Reveal";
+
+const reliabilitySubtitle = "通过公开脱敏数据、生成质量指标、可视化对比和系统运行结果，多维度呈现产品可靠性。";
+
+const reliabilityDatasets = [
+  {
+    title: "BraTS2021",
+    tag: "脑肿瘤MRI数据",
+    dataType: "公开脱敏多模态脑MRI",
+    modalities: "T1 / T2 / FLAIR / T1ce",
+    purpose: "复杂病灶场景验证",
+    image: bratsDatasetFigure,
+  },
+  {
+    title: "IXI",
+    tag: "健康脑MRI数据",
+    dataType: "公开脱敏多模态脑MRI",
+    modalities: "T1 / T2 / PD",
+    purpose: "规则脑结构场景补充验证",
+    image: ixiDatasetFigure,
+  },
+];
+
+const reliabilityMetrics = [
+  {
+    metric: "PSNR",
+    value: "27.58 dB",
+    source: "BraTS2021 T1→T2",
+    description: "衡量像素层面的重建接近程度，数值越高表示误差越小。",
+  },
+  {
+    metric: "SSIM",
+    value: "92.99%",
+    source: "BraTS2021 T1→T2",
+    description: "衡量结构相似性，数值越高表示结构保持越好。",
+  },
+  {
+    metric: "PSNR",
+    value: "31.63 dB",
+    source: "IXI T2→T1",
+    description: "规则脑结构场景下的生成表现参考。",
+  },
+  {
+    metric: "SSIM",
+    value: "95.64%",
+    source: "IXI T2→T1",
+    description: "规则脑结构场景下的结构相似性参考。",
+  },
+];
+
+const reliabilityRuntime = [
+  {
+    metric: "功能通过率",
+    value: "100%",
+    description: "上传、生成、对比、下载流程测试通过",
+  },
+  {
+    metric: "生成成功率",
+    value: "待统计",
+    description: "建议接入多次请求统计，不伪造结果",
+  },
+  {
+    metric: "平均推理耗时",
+    value: "待统计",
+    description: "建议统计模型推理与端到端返回耗时",
+  },
+  {
+    metric: "接口状态",
+    value: "服务正常",
+    description: "健康检查接口可返回模型加载与设备信息",
+  },
+];
+
+const reliabilityHealthLines = [
+  "服务状态：正常",
+  "模型状态：已加载",
+  "运行设备：GPU / CPU 自动识别",
+  "接口状态：可访问",
+];
 
 export const Reliability = () => {
   return (
@@ -36,6 +107,11 @@ export const Reliability = () => {
                   <h4 className="text-[20px] font-semibold text-text">{dataset.title}</h4>
                   <span className="rounded-full border border-border bg-surface px-3 py-1 text-[12px] text-secondary">{dataset.tag}</span>
                 </div>
+
+                <div className="mt-3 aspect-[15/4] overflow-hidden rounded-[10px] border border-border bg-surface">
+                  <img src={dataset.image} alt={`${dataset.title}数据集示意图`} className="h-full w-full object-contain object-center" />
+                </div>
+
                 <div className="mt-3 space-y-2 text-[14px] leading-7 text-muted">
                   <p>数据类型：{dataset.dataType}</p>
                   <p>常用模态：{dataset.modalities}</p>
@@ -52,9 +128,7 @@ export const Reliability = () => {
           <h3 id="metric-heading" className="font-serif text-[28px] font-semibold leading-[1.3] text-text">
             生成质量指标
           </h3>
-          <p className="text-[14px] leading-7 text-muted">
-            通过PSNR、SSIM等指标评价生成图像与真实目标模态之间的接近程度。
-          </p>
+          <p className="text-[14px] leading-7 text-muted">通过PSNR、SSIM等指标评价生成图像与真实目标模态之间的接近程度。</p>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {reliabilityMetrics.map((metric, index) => (
               <article key={`${metric.metric}-${metric.source}-${index}`} className="rounded-[14px] border border-border bg-bg p-4">
@@ -74,31 +148,13 @@ export const Reliability = () => {
             可视化结果对比
           </h3>
           <p className="text-[14px] leading-7 text-muted">
-            通过源模态、AI生成目标模态和真实目标模态的并列展示，直观观察模态补全效果。
+            通过源模态、AI生成目标模态和真实目标模态的对比展示，直观观察模态补全效果。
           </p>
-          <div className="grid gap-4 lg:grid-cols-3">
-            <article className="rounded-[14px] border border-border bg-bg p-4">
-              <p className="text-[13px] font-medium text-secondary">源模态输入</p>
-              <p className="mt-1 text-[12px] text-muted">T1 MRI</p>
-              <div className="mt-3 overflow-hidden rounded-[10px] border border-border bg-bg p-2">
-                <img src={t1Figure} alt="源模态输入 T1 MRI" className="mx-auto h-auto max-h-[210px] w-auto max-w-full object-contain" />
-              </div>
-            </article>
-            <article className="rounded-[14px] border border-border bg-bg p-4">
-              <p className="text-[13px] font-medium text-secondary">AI生成目标模态</p>
-              <p className="mt-1 text-[12px] text-muted">生成T2</p>
-              <div className="mt-3 overflow-hidden rounded-[10px] border border-border bg-bg p-2">
-                <img src={compareFigure} alt="AI生成目标模态 生成T2" className="mx-auto h-auto max-h-[210px] w-auto max-w-full object-contain" />
-              </div>
-            </article>
-            <article className="rounded-[14px] border border-border bg-bg p-4">
-              <p className="text-[13px] font-medium text-secondary">真实目标模态</p>
-              <p className="mt-1 text-[12px] text-muted">真实T2参考</p>
-              <div className="mt-3 overflow-hidden rounded-[10px] border border-border bg-bg p-2">
-                <img src={t2Figure} alt="真实目标模态 真实T2参考" className="mx-auto h-auto max-h-[210px] w-auto max-w-full object-contain" />
-              </div>
-            </article>
+
+          <div className="aspect-[16/9] overflow-hidden rounded-[14px] border border-border bg-bg">
+            <img src={visualCompareFigure} alt="可视化结果对比" className="h-full w-full object-contain object-center" />
           </div>
+
           <p className="rounded-[12px] border border-border bg-bg px-4 py-3 text-[13px] leading-6 text-muted">
             用于观察脑室结构、灰白质边界、病灶相关区域和灰度过渡情况。结构越稳定，对多序列对照观察越有参考价值。
           </p>
@@ -110,9 +166,7 @@ export const Reliability = () => {
           <h3 id="runtime-heading" className="font-serif text-[28px] font-semibold leading-[1.3] text-text">
             系统运行状态
           </h3>
-          <p className="text-[14px] leading-7 text-muted">
-            通过功能测试与接口状态展示系统的可运行性和工程完整度。
-          </p>
+          <p className="text-[14px] leading-7 text-muted">通过功能测试与接口状态展示系统的可运行性和工程完整度。</p>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {reliabilityRuntime.map((runtime) => (
               <article key={runtime.metric} className="rounded-[14px] border border-border bg-bg p-4">

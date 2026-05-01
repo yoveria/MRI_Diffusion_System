@@ -1,15 +1,15 @@
-﻿import { Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { NavItem, SectionId } from "../constants/site";
+import type { RouteKey, RouteNavItem } from "../constants/routes";
 
 type HeaderProps = {
-  navItems: NavItem[];
-  activeSection: SectionId;
-  onNavClick: (id: SectionId) => void;
+  navItems: RouteNavItem[];
+  activeRoute: RouteKey;
+  onNavigate: (id: RouteKey) => void;
   onPrimaryAction: () => void;
 };
 
-export const Header = ({ navItems, activeSection, onNavClick, onPrimaryAction }: HeaderProps) => {
+export const Header = ({ navItems, activeRoute, onNavigate, onPrimaryAction }: HeaderProps) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
@@ -23,13 +23,13 @@ export const Header = ({ navItems, activeSection, onNavClick, onPrimaryAction }:
     return () => window.removeEventListener("resize", closeOnResize);
   }, []);
 
-  const handleNavClick = (id: SectionId) => {
-    onNavClick(id);
+  const handleNavClick = (id: RouteKey) => {
+    onNavigate(id);
     setIsMobileMenuOpen(false);
   };
 
-  const navButtonClass = (id: SectionId): string => {
-    const isActive = activeSection === id;
+  const navButtonClass = (id: RouteKey): string => {
+    const isActive = activeRoute === id;
 
     return [
       "rounded-full px-4 py-2 text-sm font-medium transition-all duration-200",
@@ -61,7 +61,7 @@ export const Header = ({ navItems, activeSection, onNavClick, onPrimaryAction }:
               type="button"
               onClick={() => handleNavClick(item.id)}
               className={navButtonClass(item.id)}
-              aria-current={activeSection === item.id ? "page" : undefined}
+              aria-current={activeRoute === item.id ? "page" : undefined}
             >
               {item.label}
             </button>
@@ -98,7 +98,7 @@ export const Header = ({ navItems, activeSection, onNavClick, onPrimaryAction }:
                 type="button"
                 onClick={() => handleNavClick(item.id)}
                 className={navButtonClass(item.id)}
-                aria-current={activeSection === item.id ? "page" : undefined}
+                aria-current={activeRoute === item.id ? "page" : undefined}
               >
                 {item.label}
               </button>

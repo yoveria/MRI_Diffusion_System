@@ -1,7 +1,5 @@
-import { BrainCircuit, Download, ScanSearch, UploadCloud } from "lucide-react";
-import compareFigure from "../figure/compare.png";
-import t1Figure from "../figure/T1.png";
-import t2Figure from "../figure/T2.png";
+﻿import { BrainCircuit, Download, ScanSearch, UploadCloud } from "lucide-react";
+import demoVideo from "../figure/演示视频.mp4";
 import { capabilitiesSubtitle, capabilityItems, featureHighlights } from "../constants/site";
 import { Reveal } from "./Reveal";
 
@@ -61,37 +59,17 @@ export const Features = () => {
           <h3 id="mockup-heading" className="font-serif text-[28px] font-semibold leading-[1.3] text-text">
             能力界面示意
           </h3>
-          <div className="grid gap-4 lg:grid-cols-[1fr_0.92fr_1fr]">
-            <article className="rounded-[14px] border border-border bg-bg p-4">
-              <p className="text-[13px] font-medium tracking-[0.01em] text-secondary">源模态输入</p>
-              <div className="mt-3 overflow-hidden rounded-[10px] border border-border bg-bg p-2">
-                <img src={t1Figure} alt="源模态输入示意" className="mx-auto h-auto max-h-[220px] w-auto max-w-full object-contain" />
-              </div>
-              <div className="mt-3 rounded-[8px] border border-border bg-surface px-2.5 py-1.5 text-[12px] text-muted">上传并确认 T1 输入图像。</div>
-            </article>
-            <article className="rounded-[14px] border border-border bg-bg p-4">
-              <p className="text-[13px] font-medium tracking-[0.01em] text-secondary">目标模态生成</p>
-              <div className="mt-3 space-y-2">
-                <div className="rounded-[10px] border border-border bg-surface px-3 py-2 text-[13px] text-muted">扩散模型执行目标模态生成</div>
-                <div className="rounded-[10px] border border-border bg-surface px-3 py-2 text-[13px] text-muted">持续反馈上传、推理和结果状态</div>
-                <div className="rounded-[10px] border border-border bg-surface px-3 py-2 text-[13px] text-muted">可中断、可重置、可重复验证</div>
-              </div>
-              <div className="mt-3 h-2 rounded-full bg-border/60">
-                <div className="h-full w-4/5 rounded-full bg-gradient-to-r from-primary to-secondary" />
-              </div>
-            </article>
-            <article className="rounded-[14px] border border-border bg-bg p-4">
-              <p className="text-[13px] font-medium tracking-[0.01em] text-secondary">多模态对照与导出</p>
-              <div className="mt-3 overflow-hidden rounded-[10px] border border-border bg-bg p-2">
-                <img src={t2Figure} alt="目标模态生成示意" className="mx-auto h-auto max-h-[200px] w-auto max-w-full object-contain" />
-              </div>
-              <div className="mt-3 overflow-hidden rounded-[10px] border border-border bg-bg p-2">
-                <img src={compareFigure} alt="多模态滑块对比示意" className="mx-auto h-auto max-h-[200px] w-auto max-w-full object-contain" />
-              </div>
-              <div className="mt-3 rounded-[8px] border border-border bg-surface px-2.5 py-1.5 text-[12px] text-muted">
-                支持并排、缩放与滑块对比，并可下载结果。
-              </div>
-            </article>
+          <div className="rounded-[14px] border border-border bg-bg p-4">
+            <p className="text-[13px] font-medium tracking-[0.01em] text-secondary">演示视频</p>
+            <div className="mt-3 aspect-video overflow-hidden rounded-[10px] border border-border bg-bg">
+              <video className="h-full w-full object-cover" controls preload="metadata">
+                <source src={demoVideo} type="video/mp4" />
+                当前浏览器不支持视频播放。
+              </video>
+            </div>
+            <div className="mt-3 rounded-[8px] border border-border bg-surface px-3 py-2 text-[12px] text-muted">
+              从图像上传到目标模态生成与对照观察，完整展示在线体验流程。
+            </div>
           </div>
         </section>
       </Reveal>

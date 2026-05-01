@@ -1,9 +1,9 @@
-import type { SectionId } from "../constants/site";
+import type { RouteKey } from "../constants/routes";
 
 type FooterCTAProps = {
   onPrimaryAction: () => void;
   onSecondaryAction: () => void;
-  onNavClick: (id: SectionId) => void;
+  onNavClick: (id: RouteKey) => void;
 };
 
 export const FooterCTA = ({ onPrimaryAction, onSecondaryAction, onNavClick }: FooterCTAProps) => {
