@@ -1,0 +1,191 @@
+{
+  "meta": {
+    "run_time": "2026-05-02 13:53:30",
+    "elapsed_ms": 47531.906,
+    "base_url": "http://127.0.0.1:5000",
+    "dataset_dir": "D:\\Desktop\\mri-diffusion-system\\t1_selected_40",
+    "case_count": 40
+  },
+  "functional": {
+    "cases": [
+      {
+        "name": "health_ready",
+        "passed": false,
+        "detail": "error=<urlopen error timed out>"
+      },
+      {
+        "name": "health_required_fields",
+        "passed": false,
+        "detail": "error=<urlopen error timed out>"
+      },
+      {
+        "name": "generate_missing_file",
+        "passed": false,
+        "detail": "error=<urlopen error timed out>"
+      },
+      {
+        "name": "generate_invalid_file",
+        "passed": false,
+        "detail": "error=<urlopen error timed out>"
+      },
+      {
+        "name": "generate_method_guard",
+        "passed": false,
+        "detail": "error=<urlopen error timed out>"
+      },
+      {
+        "name": "generate_valid_case",
+        "passed": false,
+        "detail": "error=<urlopen error timed out>"
+      },
+      {
+        "name": "result_url_accessible",
+        "passed": false,
+        "detail": "skipped because generate_valid_case failed"
+      }
+    ],
+    "summary": {
+      "passed": 0,
+      "total": 7,
+      "pass_rate_pct": 0.0
+    }
+  },
+  "interface_status": {
+    "probes": [
+      {
+        "probe_index": 1,
+        "status": "down",
+        "http_status": null,
+        "latency_ms": 1001.783,
+        "detail": "<urlopen error timed out>"
+      }
+    ],
+    "summary": {
+      "total": 1,
+      "up": 0,
+      "degraded": 0,
+      "down": 1,
+      "availability_up_pct": 0.0,
+      "availability_non_down_pct": 0.0,
+      "avg_latency_ms": null,
+      "p95_latency_ms": null,
+      "degraded_threshold_ms": 1000.0
+    }
+  },
+  "generation": {
+    "summary": {
+      "total_cases": 40,
+      "success_cases": 0,
+      "failed_cases": 40,
+      "success_rate_pct": 0.0,
+      "avg_e2e_return_ms": null,
+      "p50_e2e_return_ms": null,
+      "p95_e2e_return_ms": null,
+      "avg_backend_request_total_ms": null,
+      "avg_backend_inference_total_ms": null,
+      "avg_backend_model_infer_ms": null
+    },
+    "failures": [
+      {
+        "index": 1,
+        "case": "slice_0.npy",
+        "reason": "<urlopen error timed out>"
+      },
+      {
+        "index": 2,
+        "case": "slice_102.npy",
+        "reason": "<urlopen error timed out>"
+      },
+      {
+        "index": 3,
+        "case": "slice_1025.npy",
+        "reason": "<urlopen error timed out>"
+      },
+      {
+        "index": 4,
+        "case": "slice_1127.npy",
+        "reason": "<urlopen error timed out>"
+      },
+      {
+        "index": 5,
+        "case": "slice_1230.npy",
+        "reason": "<urlopen error timed out>"
+      },
+      {
+        "index": 6,
+        "case": "slice_1333.npy",
+        "reason": "<urlopen error timed out>"
+      },
+      {
+        "index": 7,
+        "case": "slice_1435.npy",
+        "reason": "<urlopen error timed out>"
+      },
+      {
+        "index": 8,
+        "case": "slice_1538.npy",
+        "reason": "<urlopen error timed out>"
+      },
+      {
+        "index": 9,
+        "case": "slice_1640.npy",
+        "reason": "<urlopen error timed out>"
+      },
+      {
+        "index": 10,
+        "case": "slice_166.npy",
+        "reason": "<urlopen error timed out>"
+      },
+      {
+        "index": 11,
+        "case": "slice_1743.npy",
+        "reason": "<urlopen error timed out>"
+      },
+      {
+        "index": 12,
+        "case": "slice_178.npy",
+        "reason": "<urlopen error timed out>"
+      },
+      {
+        "index": 13,
+        "case": "slice_1845.npy",
+        "reason": "<urlopen error timed out>"
+      },
+      {
+        "index": 14,
+        "case": "slice_1948.npy",
+        "reason": "<urlopen error timed out>"
+      },
+      {
+        "index": 15,
+        "case": "slice_205.npy",
+        "reason": "<urlopen error timed out>"
+      },
+      {
+        "index": 16,
+        "case": "slice_2050.npy",
+        "reason": "<urlopen error timed out>"
+      },
+      {
+        "index": 17,
+        "case": "slice_2153.npy",
+        "reason": "<urlopen error timed out>"
+      },
+      {
+        "index": 18,
+        "case": "slice_2255.npy",
+        "reason": "<urlopen error timed out>"
+      },
+      {
+        "index": 19,
+        "case": "slice_2358.npy",
+        "reason": "<urlopen error timed out>"
+      },
+      {
+        "index": 20,
+        "case": "slice_2460.npy",
+        "reason": "<urlopen error timed out>"
+      }
+    ]
+  }
+}

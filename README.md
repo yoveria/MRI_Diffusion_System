@@ -130,3 +130,15 @@ curl ifconfig.me
 - 前端预览命令：`npm run preview -- --host 0.0.0.0 --port 5173`
 
 如果服务器已安装 Nginx，更推荐由 Nginx 直接托管前端 `dist/` 目录，并将 `/api` 反向代理到 `127.0.0.1:5000`。
+
+## 10）刷新缓存
+
+```basic
+https://mri-diffusion-system.cn/
+https://mri-diffusion-system.cn/index.html
+https://mri-diffusion-system.cn/assets/*
+https://www.mri-diffusion-system.cn/
+https://www.mri-diffusion-system.cn/index.html
+https://www.mri-diffusion-system.cn/assets/*
+```
+

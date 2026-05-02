@@ -1,6 +1,8 @@
 import glob
+import json
 import os
 import sys
+import time
 import uuid
 
 import cv2
@@ -24,8 +26,19 @@ CORS(app)
 
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
 RESULT_FOLDER = os.path.join(BASE_DIR, "static", "results")
+LOG_FOLDER = os.path.join(BASE_DIR, "logs")
+METRICS_LOG_PATH = os.getenv("METRICS_LOG_PATH", os.path.join(LOG_FOLDER, "generate_metrics.jsonl"))
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(RESULT_FOLDER, exist_ok=True)
+os.makedirs(LOG_FOLDER, exist_ok=True)
+
+
+def _append_metrics_log(record):
+    try:
+        with open(METRICS_LOG_PATH, "a", encoding="utf-8") as f:
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    except Exception as exc:  # pylint: disable=broad-except
+        print(f"[Metrics] Failed to write metrics log: {exc}")
 
 
 class SelfRDBService:
@@ -147,6 +160,28 @@ class SelfRDBService:
         }
         return tensor, meta
 
+    def _load_input_image(self, input_path):
+        ext = os.path.splitext(input_path)[1].lower()
+        if ext == ".npy":
+            arr = np.load(input_path)
+            data = np.asarray(arr).squeeze()
+            if data.ndim > 2:
+                data = data[0]
+            if data.ndim != 2:
+                raise ValueError(f"Unsupported npy shape: {data.shape}")
+
+            data = data.astype(np.float32)
+            min_v = float(np.min(data))
+            max_v = float(np.max(data))
+            if max_v - min_v < 1e-8:
+                gray_u8 = np.zeros_like(data, dtype=np.uint8)
+            else:
+                norm = (data - min_v) / (max_v - min_v)
+                gray_u8 = np.clip(norm * 255.0, 0.0, 255.0).astype(np.uint8)
+            return cv2.cvtColor(gray_u8, cv2.COLOR_GRAY2BGR)
+
+        return cv2.imread(input_path, cv2.IMREAD_COLOR)
+
     def _postprocess(self, pred, meta):
         out = pred.detach().cpu().squeeze().numpy()
 
@@ -171,14 +206,35 @@ class SelfRDBService:
         if self.model is None:
             raise RuntimeError(self.error or "SelfRDB model is not initialized.")
 
-        image = cv2.imread(input_path, cv2.IMREAD_COLOR)
+        preprocess_start = time.perf_counter()
+        image = self._load_input_image(input_path)
         if image is None:
             raise ValueError("Invalid image file.")
 
         y, meta = self._preprocess(image)
+        preprocess_ms = (time.perf_counter() - preprocess_start) * 1000.0
+
+        infer_start = time.perf_counter()
         pred = self.model.diffusion.sample_x0(y, self.model.generator)
+        model_infer_ms = (time.perf_counter() - infer_start) * 1000.0
+
+        postprocess_start = time.perf_counter()
         output = self._postprocess(pred, meta)
-        cv2.imwrite(output_path, output)
+        postprocess_ms = (time.perf_counter() - postprocess_start) * 1000.0
+
+        save_start = time.perf_counter()
+        is_saved = cv2.imwrite(output_path, output)
+        if not is_saved:
+            raise RuntimeError("Failed to save generated image.")
+        save_output_ms = (time.perf_counter() - save_start) * 1000.0
+
+        return {
+            "preprocess_ms": round(preprocess_ms, 3),
+            "model_infer_ms": round(model_infer_ms, 3),
+            "postprocess_ms": round(postprocess_ms, 3),
+            "save_output_ms": round(save_output_ms, 3),
+            "inference_total_ms": round(preprocess_ms + model_infer_ms + postprocess_ms + save_output_ms, 3),
+        }
 
 
 selfrdb_service = SelfRDBService()
@@ -203,11 +259,37 @@ def health():
 
 @app.route("/api/generate", methods=["POST"])
 def generate_mri():
+    request_start = time.perf_counter()
+    request_id = str(uuid.uuid4())
+
     if "image" not in request.files:
-        return jsonify({"error": "No image uploaded"}), 400
+        request_total_ms = (time.perf_counter() - request_start) * 1000.0
+        _append_metrics_log(
+            {
+                "request_id": request_id,
+                "path": "/api/generate",
+                "status": "error",
+                "http_status": 400,
+                "error": "No image uploaded",
+                "request_total_ms": round(request_total_ms, 3),
+            }
+        )
+        return jsonify({"request_id": request_id, "error": "No image uploaded"}), 400
 
     if selfrdb_service.model is None:
-        return jsonify({"error": "SelfRDB is not ready", "detail": selfrdb_service.error}), 500
+        request_total_ms = (time.perf_counter() - request_start) * 1000.0
+        _append_metrics_log(
+            {
+                "request_id": request_id,
+                "path": "/api/generate",
+                "status": "error",
+                "http_status": 500,
+                "error": "SelfRDB is not ready",
+                "detail": selfrdb_service.error,
+                "request_total_ms": round(request_total_ms, 3),
+            }
+        )
+        return jsonify({"request_id": request_id, "error": "SelfRDB is not ready", "detail": selfrdb_service.error}), 500
 
     file = request.files["image"]
     file_extension = os.path.splitext(file.filename)[1] or ".png"
@@ -217,18 +299,54 @@ def generate_mri():
 
     input_path = os.path.join(UPLOAD_FOLDER, input_filename)
     result_path = os.path.join(RESULT_FOLDER, result_filename)
+
+    save_input_start = time.perf_counter()
     file.save(input_path)
+    save_input_ms = (time.perf_counter() - save_input_start) * 1000.0
 
     try:
-        selfrdb_service.infer(input_path, result_path)
+        inference_timing = selfrdb_service.infer(input_path, result_path)
     except Exception as exc:  # pylint: disable=broad-except
-        return jsonify({"error": "SelfRDB inference failed", "detail": str(exc)}), 500
+        request_total_ms = (time.perf_counter() - request_start) * 1000.0
+        _append_metrics_log(
+            {
+                "request_id": request_id,
+                "file_id": file_id,
+                "path": "/api/generate",
+                "status": "error",
+                "http_status": 500,
+                "error": "SelfRDB inference failed",
+                "detail": str(exc),
+                "save_input_ms": round(save_input_ms, 3),
+                "request_total_ms": round(request_total_ms, 3),
+            }
+        )
+        return jsonify({"request_id": request_id, "error": "SelfRDB inference failed", "detail": str(exc)}), 500
+
+    request_total_ms = (time.perf_counter() - request_start) * 1000.0
+    response_timing = {
+        "save_input_ms": round(save_input_ms, 3),
+        **inference_timing,
+        "request_total_ms": round(request_total_ms, 3),
+    }
+    _append_metrics_log(
+        {
+            "request_id": request_id,
+            "file_id": file_id,
+            "path": "/api/generate",
+            "status": "success",
+            "http_status": 200,
+            "timing": response_timing,
+        }
+    )
 
     return jsonify(
         {
+            "request_id": request_id,
             "success": True,
             "result_url": f"{request.host_url.rstrip('/')}/static/results/{result_filename}",
             "message": "Generated by SelfRDB diffusion bridge",
+            "timing": response_timing,
         }
     )
 
