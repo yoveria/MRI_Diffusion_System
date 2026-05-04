@@ -45,12 +45,13 @@ Inference calls `self.model.diffusion.sample_x0(y, self.model.generator)` — on
 
 **Postprocessing** (`_postprocess`) — denormalizes to [0, 255], reverses padding/resize, saves as uint8 PNG.
 
-**Frontend** — React 19 + Zustand + Tailwind CSS + Vite. Single-page app with two views (controlled by `currentView` in Zustand store):
+**Frontend** — React 19 + TypeScript + Tailwind CSS + Vite + react-router-dom. Two-page SPA:
 
-- Generation view: `UploadZone` → `ActionPanel` → `ResultZone`
-- Comparison view: `ComparisonMode` (side-by-side slider using react-compare-image)
-
-State is managed in `store/useStore.js` (Zustand). The `ActionPanel` component handles the axios POST to `/api/generate` with a simulated progress bar.
+- **Landing 页**（首页）: `LandingHero` → `LandingFeatures` → `LandingGuide` → `LandingScenarios` → `LandingReliability`
+- **Demo 工作台**（/demo）: `DemoUploader` → `DemoControlPanel` → `DemoWorkbench`（含 ImagePane / ComparePane / StatusBar / DownloadAction）
+- 路由定义在 `src/constants/routes.ts`，通过 `pushState` 管理
+- API 服务层在 `src/services/demoApi.ts`（axios 封装，超时 900s）
+- 类型定义在 `src/types/demo.ts`
 
 ## Environment Variables
 
