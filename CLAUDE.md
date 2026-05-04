@@ -86,3 +86,4 @@ On CPU with no CUDA, the code auto-detects and falls back to `torch.device("cpu"
 
 要求：
 Claude解释、计划时使用中文
+git提交时的注释尽量使用中文，且格式精准

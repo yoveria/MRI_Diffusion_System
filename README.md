@@ -1,228 +1,235 @@
 # MRI Diffusion System
 
-基于扩散模型的多模态脑 MRI 生成系统。以单模态图像（T1/T2）为输入，结合 SelfRDB 模型实现跨模态生成、结果恢复与可视化对比。
+基于扩散模型的多模态脑 MRI 生成系统。以单模态图像为输入，结合面向脑 MRI 场景适配的 SelfRDB 模型与前后端分离架构，实现预处理、跨模态生成（T1→T2）、结果恢复、可视化对比与下载输出的一体化流程，可服务于医学影像教学演示、科研验证与模态补全等应用场景。
 
 ## 目录结构
 
 ```text
 mri-diffusion-system/
-├── BackEnd/                        # Flask 后端 API
-├── FrontEnd/mri-diffusion-system   # React 前端
-├── SelfRDB/                        # SelfRDB 扩散模型
-├── brats_t1_t2/                    # 模型 checkpoint（需自行放置）
-├── scripts/start_backend.sh        # 后端启动脚本
-├── deploy.sh                       # 一键部署脚本
-├── gunicorn_config.py              # 生产级 WSGI 配置
-├── nginx.conf                      # Nginx 反代配置模板
-└── mri-diffusion.service           # systemd 服务单元
+├── BackEnd/                         # Flask 后端 API
+│   ├── app.py                       # 主入口，模型加载与推理服务
+│   ├── static/uploads/              # 上传的源图像（运行时）
+│   ├── static/results/              # 生成的 T2 结果（运行时）
+│   └── logs/                        # 推理耗时指标日志（运行时）
+├── FrontEnd/mri-diffusion-system    # React + TypeScript 前端
+│   ├── src/
+│   │   ├── LandingApp.tsx           # Landing 页主组件
+│   │   ├── components/              # Landing 组件（Hero/Features/Guide 等）
+│   │   ├── components/demo/         # Demo 工作台组件
+│   │   ├── services/demoApi.ts      # API 封装层
+│   │   ├── types/demo.ts            # 类型定义
+│   │   ├── constants/               # 路由与站点配置
+│   │   └── hooks/                   # 自定义 Hook
+│   └── dist/                        # 生产构建产物
+├── SelfRDB/                         # SelfRDB 扩散模型
+│   ├── main.py                      # BridgeRunner (LightningModule)
+│   ├── diffusion.py                 # DiffusionBridge 扩散调度器
+│   ├── backbones/ncsnpp.py          # NCSN++ 生成器
+│   ├── backbones/discriminator.py   # 判别器（仅训练使用）
+│   └── config.yaml                  # 模型超参数
+├── brats_t1_t2/                     # 模型 checkpoint（需自行放置）
+├── t1_selected_40/                  # 示例 T1 切片（.npy 格式）
+├── scripts/                         # 辅助脚本
+│   ├── start_backend.sh             # 后端快速启动
+│   ├── run_quality_eval.py          # 生成质量评估工具
+│   └── reports/                     # 历史评估报告
+├── deploy.sh                        # 一键部署脚本
+├── gunicorn_config.py               # 生产 WSGI 配置
+├── nginx.conf                       # Nginx 反代配置
+├── mri-diffusion.service            # systemd 服务单元
+├── requirements.txt                 # CPU Python 依赖
+├── requirements-gpu.txt             # GPU Python 依赖 (CUDA 11.8)
+└── CLAUDE.md                        # 代码库指南
 ```
 
-## 前置条件
+## 硬件要求
 
-- **Checkpoint 文件**: 需自行准备 `.ckpt` 模型文件，放置于 `brats_t1_t2/` 目录或通过环境变量指定路径
+| 场景 | vCPU | 内存 | GPU | 磁盘 | 单次推理耗时 |
+|------|------|------|-----|------|-------------|
+| GPU 推理 | 4 | 8 GiB | 1× NVIDIA A10/T4 | 20 GiB | ~2-5 秒 |
+| **CPU 推理（低配）** | **2** | **4 GiB** | 无 | **20 GiB** | **~50-90 秒** |
+| CPU 推理（推荐） | 8 | 16 GiB | 无 | 20 GiB | 1-3 分钟 |
 
-### 硬件要求
+> CPU 推理使用 PyTorch 2.0.1，模型 NCSN++ 256×256，10 步扩散 × 2 次递归 = 20 次正向传播。
 
-| 场景 | CPU | 内存 | GPU | 磁盘 |
-|------|-----|------|-----|------|
-| GPU 推理 | 4 vCPU | 8 GiB | 1× NVIDIA (建议 A10/T4) | 20 GiB |
-| CPU 推理 | 8 vCPU | 16 GiB | 无 | 20 GiB |
+## 快速部署（CPU / 2vCPU 4GiB）
 
-> **注意**: CPU 推理单张图片约 1-3 分钟，仅适合低频使用或演示场景。生产环境建议使用 GPU。
-
-## 快速部署（推荐）
+### 1) 系统依赖
 
 ```bash
-# CPU 服务器
-bash deploy.sh --cpu --checkpoint /path/to/model.ckpt
+sudo apt update && sudo apt install -y git curl build-essential \
+  python3.10 python3.10-venv python3.10-dev \
+  libgl1 libglib2.0-0 libsm6 libxext6 libxrender1 \
+  libopenblas-dev libomp-dev nginx
 
-# GPU 服务器
-bash deploy.sh --gpu --checkpoint /path/to/model.ckpt --port 5000
+# Node.js 20+（前端构建）
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs
 ```
 
-脚本会自动完成：Python 虚拟环境创建、依赖安装、checkpoint 链接、前端构建。完成后按输出提示启动服务。
-
----
-
-## 手动部署
-
-### 1. 系统依赖
+### 2) Swap 与内核参数（低配服务器必需）
 
 ```bash
-sudo apt update
-sudo apt install -y git curl build-essential \
-  libgl1 libglib2.0-0 libsm6 libxext6 libxrender1
+# 4 GiB swap 作为 OOM 安全网
+sudo fallocate -l 4G /swapfile
+sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+
+# mmap 相关内核参数
+sudo sysctl -w vm.max_map_count=262144
+echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.conf
 ```
 
-### 2. 安装 Python 3.9+
+### 3) Python 虚拟环境与依赖
 
 ```bash
-# 方式 A: Miniconda（推荐）
-wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
-bash ~/miniconda.sh -b -p $HOME/miniconda3
-eval "$($HOME/miniconda3/bin/conda shell.bash hook)"
-conda init bash
-# 重新打开终端后:
-conda create -n selfrdb python=3.9 -y
-conda activate selfrdb
-
-# 方式 B: venv（无 conda）
-sudo apt install -y python3.9 python3.9-venv
-python3.9 -m venv .venv
-source .venv/bin/activate
-```
-
-### 3. 安装 Python 依赖
-
-```bash
-# CPU 服务器
+cd mri-diffusion-system
+python3.10 -m venv .venv && source .venv/bin/activate
+pip install --upgrade pip setuptools wheel
 pip install -r requirements.txt
-
-# GPU 服务器 (CUDA 11.8)
-pip install -r requirements-gpu.txt
-
-# 可选：生产级 WSGI 服务器
 pip install gunicorn
 ```
 
-### 4. 放置 checkpoint
+### 4) 放置模型 Checkpoint
 
 ```bash
 mkdir -p brats_t1_t2
-cp /path/to/your/model.ckpt brats_t1_t2/brats_t1_t2.ckpt
+cp /path/to/model.ckpt brats_t1_t2/brats_t1_t2.ckpt
 ```
 
-### 5. 验证环境
+### 5) 配置环境变量
 
 ```bash
-# GPU 服务器验证
-python -c "import torch; print('CUDA:', torch.cuda.is_available())"
-
-# CPU 服务器验证
-python -c "
-from SelfRDB.backbones.ncsnpp import NCSNpp
-print('SelfRDB import OK (CPU mode)')
-"
+cat > .env << 'EOF'
+SELFRDB_FORCE_CPU=1
+OMP_NUM_THREADS=2
+TORCH_THREADS=2
+MKL_NUM_THREADS=2
+OPENBLAS_NUM_THREADS=2
+OMP_WAIT_POLICY=PASSIVE
+CUDA_VISIBLE_DEVICES=""
+SELFRDB_CONFIG=/root/Project/mri-diffusion-system/SelfRDB/config.yaml
+SELFRDB_CHECKPOINT=/root/Project/mri-diffusion-system/brats_t1_t2/brats_t1_t2.ckpt
+FLASK_HOST=0.0.0.0
+FLASK_PORT=5000
+FLASK_DEBUG=0
+GUNICORN_WORKERS=1
+GUNICORN_TIMEOUT=900
+EOF
 ```
 
-### 6. 启动后端
+### 6) 后端部署（Systemd）
 
 ```bash
-export SELFRDB_CONFIG=$PWD/SelfRDB/config.yaml
-export SELFRDB_CHECKPOINT=$PWD/brats_t1_t2/brats_t1_t2.ckpt
-export FLASK_HOST=0.0.0.0
-export FLASK_PORT=5000
-python BackEnd/app.py
+# 安装 systemd 服务
+sudo cp mri-diffusion.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now mri-diffusion
+
+# 查看启动日志
+sudo journalctl -u mri-diffusion -f
 ```
 
-健康检查：
+### 7) 前端构建与 Nginx 配置
 
 ```bash
-curl http://127.0.0.1:5000/api/health
-# {"ok":true,"selfrdb_ready":true,"device":"cuda",...}
-```
-
-### 7. 构建并启动前端
-
-需要 Node.js 20+。
-
-```bash
+# 构建
 cd FrontEnd/mri-diffusion-system
-npm install
+NODE_OPTIONS="--max-old-space-size=512" npm install
+echo "" > .env.production   # 同源部署，空 API URL
+NODE_OPTIONS="--max-old-space-size=512" npm run build
 
-# 创建生产环境变量（替换为你的服务器 IP）
-echo "VITE_API_BASE_URL=http://YOUR_SERVER_IP:5000" > .env.production
-
-npm run build
-npm run preview -- --host 0.0.0.0 --port 5173
+# 配置 Nginx
+sudo cp nginx.conf /etc/nginx/sites-available/mri-diffusion
+sudo ln -sf /etc/nginx/sites-available/mri-diffusion /etc/nginx/sites-enabled/
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo nginx -t && sudo systemctl reload nginx
 ```
 
-浏览器访问 `http://YOUR_SERVER_IP:5173`
+### 8) 开放端口（阿里云安全组）
 
----
+在 ECS 控制台安全组中添加入方向规则：TCP **80** (HTTP) 和 **443** (HTTPS，可选)。
 
-## 生产环境部署
-
-### Gunicorn（WSGI 服务器）
+### 9) 验证部署
 
 ```bash
-gunicorn -c gunicorn_config.py BackEnd.app:app
+# 健康检查
+curl http://127.0.0.1/api/health
+# {"ok":true,"selfrdb_ready":true,"device":"cpu","image_size":256,...}
+
+# 推理测试（普通图片）
+curl -X POST -F "image=@test.png" http://127.0.0.1:5000/api/generate
+
+# 推理测试（.npy 切片）
+curl -X POST -F "image=@t1_selected_40/slice_1845.npy" http://127.0.0.1:5000/api/generate
+
+# 公网访问
+curl http://<公网IP>/api/health
 ```
 
-环境变量：
+浏览器访问 `http://<公网IP>` 即可使用完整前端（Landing 页 + Demo 工作台）。
 
-| 变量 | 默认值 | 说明 |
-|------|--------|------|
-| `GUNICORN_WORKERS` | `1` | Worker 数（模型大，建议保持 1） |
-| `GUNICORN_TIMEOUT` | `300` | 请求超时秒数（CPU 推理需较长时间） |
+## API 接口
 
-### Nginx 反代
-
-1. 将 `nginx.conf` 复制到 `/etc/nginx/sites-available/mri-diffusion`
-2. 修改 `server_name` 和 `root` 路径
-3. 创建软链接并重载：
-
-```bash
-ln -s /etc/nginx/sites-available/mri-diffusion /etc/nginx/sites-enabled/
-nginx -t && systemctl reload nginx
-```
-
-### Systemd 服务
-
-1. 修改 `mri-diffusion.service` 中的路径为实际部署路径
-2. 复制并启动：
-
-```bash
-cp mri-diffusion.service /etc/systemd/system/
-systemctl daemon-reload
-systemctl enable --now mri-diffusion
-```
-
----
-
-## 环境变量参考
-
-| 变量 | 默认值 | 说明 |
-|------|--------|------|
-| `SELFRDB_CONFIG` | `SelfRDB/config.yaml` | 模型配置文件路径 |
-| `SELFRDB_CHECKPOINT` | 自动发现 | Checkpoint 文件路径 |
-| `SELFRDB_FORCE_CPU` | `0` | 强制使用 CPU（即使有 GPU） |
-| `FLASK_HOST` | `0.0.0.0` | Flask 监听地址 |
-| `FLASK_PORT` | `5000` | Flask 监听端口 |
-| `FLASK_DEBUG` | `0` | Flask 调试模式 |
-| `TORCH_THREADS` | `2` | CPU 推理时的线程数 |
-
----
-
-## 网络配置
-
-在云服务器安全组中开放以下端口：
-
-| 端口 | 协议 | 用途 |
+| 方法 | 路径 | 说明 |
 |------|------|------|
-| 5000 | TCP | Flask API |
-| 5173 | TCP | Vite 前端预览（仅开发/调试） |
-| 80/443 | TCP | Nginx（生产环境） |
+| GET | `/api/health` | 健康检查，返回模型状态与设备信息 |
+| POST | `/api/generate` | 图片生成（multipart/form-data，字段名 `image`），支持 PNG/JPG/NPY |
 
----
+### 响应示例
 
-## 常见问题
+```json
+{
+  "request_id": "uuid",
+  "success": true,
+  "result_url": "/static/results/uuid.png",
+  "message": "Generated by SelfRDB diffusion bridge",
+  "timing": {
+    "preprocess_ms": 127.18,
+    "model_infer_ms": 83794.27,
+    "postprocess_ms": 0.39,
+    "save_output_ms": 2.05,
+    "inference_total_ms": 83923.90,
+    "save_input_ms": 1.15,
+    "request_total_ms": 84082.60
+  }
+}
+```
 
-**Q: 启动时报 `nvcc not found`？**
+## 常用管理命令
 
-v1.1+ 已修复此问题。CUDA 自定义算子编译失败时会自动回退到纯 PyTorch CPU 实现。如遇到此错误请更新代码。
+```bash
+# 服务管理
+sudo systemctl status mri-diffusion      # 查看状态
+sudo systemctl restart mri-diffusion     # 重启
+sudo journalctl -u mri-diffusion -f      # 查看日志
 
-**Q: CPU 推理太慢？**
+# Nginx
+sudo nginx -t                            # 测试配置
+sudo systemctl reload nginx              # 重载
 
-- 设置 `TORCH_THREADS=4`（或等于 CPU 核数）
-- 设置 `OMP_NUM_THREADS=4`
-- 考虑使用 GPU 服务器
+# 内存监控
+free -h                                  # 内存/swap 概览
+ps aux --sort=-%mem | head -5            # 进程内存排序
+sudo dmesg | grep -i oom                 # OOM 事件查询
+```
 
-**Q: 内存不足（OOM）？**
+## 镜像效果评估
 
-- CPU 模式已跳过 optimizer 状态加载，内存需求降低约 50%
-- 如仍 OOM，需要至少 8 GiB 内存的服务器
+项目包含生成质量评估工具，可批量测试 T1→T2 转换的保真度：
 
-**Q: Checkpoint 加载失败？**
+```bash
+python scripts/run_quality_eval.py --t1-dir t1_selected_40 --output-dir results/
+```
 
-确保 checkpoint 与 `SelfRDB/config.yaml` 中的模型配置匹配（`generator_params`、`diffusion_params` 等）。不同配置下训练的 checkpoint 可能不兼容。
+评估指标包括 MSE、PSNR、SSIM 以及 CSF/WM 对比度反转验证。
+
+## 关键优化说明
+
+当前分支 (`fix/deployment-cpu-support`) 针对低配 CPU 服务器做了以下关键调整：
+
+- **判别器删除**：加载后立即释放判别器，节省约数百 MB 内存
+- **推理锁**：拒绝并发请求返回 HTTP 503，防止 OOM
+- **超时调整**：Gunicorn/Nginx/Axios 超时均设为 900s，适配慢速 CPU
+- **线程限制**：OpenMP/MKL/Torch 线程数限制为 2，匹配 vCPU 数量
+- **OOMScoreAdjust=-500**：降低被 OOM killer 选中概率

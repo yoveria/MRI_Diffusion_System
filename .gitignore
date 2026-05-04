@@ -16,3 +16,4 @@ BackEnd/static/results/
 # 数据和模型（体积大，需单独放置）
 SelfRDB/checkpoints/
 SelfRDB/data/
+BackEnd/logs/

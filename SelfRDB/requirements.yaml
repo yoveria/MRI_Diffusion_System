@@ -1,8 +1,8 @@
 name: selfrdb
-# channels:
-#   - pytorch
-#   - nvidia
-#   - defaults
+channels:
+  - pytorch
+  - nvidia
+  - defaults
 dependencies:
   - python=3.9
   - numpy<2

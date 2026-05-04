@@ -14,6 +14,7 @@ Environment="TORCH_THREADS=2"
 Environment="MKL_NUM_THREADS=2"
 Environment="OPENBLAS_NUM_THREADS=2"
 Environment="OMP_WAIT_POLICY=PASSIVE"
+Environment="CUDA_VISIBLE_DEVICES="
 
 ExecStart=/root/Project/mri-diffusion-system/.venv/bin/gunicorn -c gunicorn_config.py BackEnd.app:app
 
