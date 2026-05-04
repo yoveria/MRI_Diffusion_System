@@ -32,7 +32,17 @@ class SelfRDBService:
     def __init__(self):
         self.config_path = os.getenv("SELFRDB_CONFIG", os.path.join(SELFRDB_DIR, "config.yaml"))
         self.checkpoint_path = os.getenv("SELFRDB_CHECKPOINT", self._discover_checkpoint())
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        if os.getenv("SELFRDB_FORCE_CPU", "").lower() in {"1", "true", "yes"}:
+            self.device = torch.device("cpu")
+            cpu_threads = os.getenv("OMP_NUM_THREADS") or os.getenv("TORCH_THREADS", "2")
+            torch.set_num_threads(int(cpu_threads))
+        elif torch.cuda.is_available():
+            self.device = torch.device("cuda")
+        else:
+            self.device = torch.device("cpu")
+            cpu_threads = os.getenv("OMP_NUM_THREADS") or os.getenv("TORCH_THREADS", "2")
+            torch.set_num_threads(int(cpu_threads))
 
         self.image_size = None
         self.norm = True

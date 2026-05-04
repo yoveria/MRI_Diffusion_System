@@ -95,7 +95,7 @@ class FusedLeakyReLU(nn.Module):
 
 
 def fused_leaky_relu(input, bias, negative_slope=0.2, scale=2 ** 0.5):
-    if input.device.type == "cpu":
+    if input.device.type == "cpu" or fused is None:
         rest_dim = [1] * (input.ndim - bias.ndim - 1)
         return (
             F.leaky_relu(
@@ -104,5 +104,4 @@ def fused_leaky_relu(input, bias, negative_slope=0.2, scale=2 ** 0.5):
             * scale
         )
 
-    else:
-        return FusedLeakyReLUFunction.apply(input, bias, negative_slope, scale)
+    return FusedLeakyReLUFunction.apply(input, bias, negative_slope, scale)
