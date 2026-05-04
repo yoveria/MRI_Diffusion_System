@@ -13,7 +13,7 @@ workers = int(os.getenv("GUNICORN_WORKERS", "1"))
 worker_class = "sync"
 
 # CPU inference is slow; set generous timeouts
-timeout = int(os.getenv("GUNICORN_TIMEOUT", "300"))
+timeout = int(os.getenv("GUNICORN_TIMEOUT", "900"))
 graceful_timeout = 30
 
 # Don't preload — avoids forking after CUDA context init

@@ -44,11 +44,11 @@ export const ActionPanel = ({ onSwitchComparison }) => {
     startedAtRef.current = Date.now();
     setProgress(4);
     setStatusText('\u9884\u5904\u7406\u4e2d');
-    setEtaLabel('14s');
+    setEtaLabel('~15min');
 
     progressTimerRef.current = setInterval(() => {
       setProgress((prev) => {
-        const next = Math.min(prev + (prev < 65 ? 2.4 : prev < 90 ? 1.1 : 0.35), 96);
+        const next = Math.min(prev + (prev < 65 ? 0.5 : prev < 90 ? 0.3 : 0.15), 96);
         setStatusText(getStatusFromProgress(next));
 
         const elapsed = (Date.now() - startedAtRef.current) / 1000;
@@ -58,7 +58,7 @@ export const ActionPanel = ({ onSwitchComparison }) => {
 
         return next;
       });
-    }, 340);
+    }, 5000);
   };
 
   const resetProgress = () => {
@@ -95,6 +95,7 @@ export const ActionPanel = ({ onSwitchComparison }) => {
           'Content-Type': 'multipart/form-data',
         },
         signal: controller.signal,
+        timeout: 900000,
       });
 
       if (response.data.success) {

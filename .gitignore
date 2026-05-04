@@ -8,3 +8,11 @@ __pycache__/
 .venv/
 node_modules/
 dist/
+
+# 运行时生成文件
+BackEnd/static/uploads/
+BackEnd/static/results/
+
+# 数据和模型（体积大，需单独放置）
+SelfRDB/checkpoints/
+SelfRDB/data/

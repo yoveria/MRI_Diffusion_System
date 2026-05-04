@@ -4,27 +4,24 @@ After=network.target
 
 [Service]
 Type=simple
-User=www-data
-Group=www-data
-WorkingDirectory=/opt/mri-diffusion-system
-Environment="SELFRDB_CONFIG=/opt/mri-diffusion-system/SelfRDB/config.yaml"
-Environment="SELFRDB_CHECKPOINT=/opt/mri-diffusion-system/brats_t1_t2/brats_t1_t2.ckpt"
-Environment="FLASK_HOST=0.0.0.0"
-Environment="FLASK_PORT=5000"
-Environment="FLASK_DEBUG=0"
+WorkingDirectory=/root/Project/mri-diffusion-system
 
-# Use gunicorn for production (pip install gunicorn)
-ExecStart=/opt/mri-diffusion-system/.venv/bin/gunicorn -c gunicorn_config.py BackEnd.app:app
+EnvironmentFile=/root/Project/mri-diffusion-system/.env
+
+Environment="SELFRDB_FORCE_CPU=1"
+Environment="OMP_NUM_THREADS=2"
+Environment="TORCH_THREADS=2"
+Environment="MKL_NUM_THREADS=2"
+Environment="OPENBLAS_NUM_THREADS=2"
+Environment="OMP_WAIT_POLICY=PASSIVE"
+
+ExecStart=/root/Project/mri-diffusion-system/.venv/bin/gunicorn -c gunicorn_config.py BackEnd.app:app
 
 Restart=on-failure
 RestartSec=10
 
-# Security hardening
-NoNewPrivileges=yes
-PrivateTmp=yes
-ProtectSystem=strict
-ProtectHome=yes
-ReadWritePaths=/opt/mri-diffusion-system/BackEnd/static
+LimitNOFILE=4096
+OOMScoreAdjust=-500
 
 [Install]
 WantedBy=multi-user.target
