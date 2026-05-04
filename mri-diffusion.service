@@ -1,0 +1,30 @@
+[Unit]
+Description=MRI Diffusion System Backend
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/mri-diffusion-system
+Environment="SELFRDB_CONFIG=/opt/mri-diffusion-system/SelfRDB/config.yaml"
+Environment="SELFRDB_CHECKPOINT=/opt/mri-diffusion-system/brats_t1_t2/brats_t1_t2.ckpt"
+Environment="FLASK_HOST=0.0.0.0"
+Environment="FLASK_PORT=5000"
+Environment="FLASK_DEBUG=0"
+
+# Use gunicorn for production (pip install gunicorn)
+ExecStart=/opt/mri-diffusion-system/.venv/bin/gunicorn -c gunicorn_config.py BackEnd.app:app
+
+Restart=on-failure
+RestartSec=10
+
+# Security hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/opt/mri-diffusion-system/BackEnd/static
+
+[Install]
+WantedBy=multi-user.target

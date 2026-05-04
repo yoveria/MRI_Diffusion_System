@@ -79,18 +79,16 @@ class SelfRDBService:
             self.target_modality = config["data"].get("target_modality")
             model_cfg = self._resolve_model_cfg(config)
 
+            # Load checkpoint manually to skip optimizer states (saves ~2x model memory on CPU)
+            ckpt = torch.load(self.checkpoint_path, map_location=self.device, weights_only=False)
+            hp = dict(ckpt.get("hyper_parameters", {}))
+            hp.update(model_cfg)
             try:
-                self.model = BridgeRunner.load_from_checkpoint(
-                    self.checkpoint_path,
-                    map_location=self.device,
-                    **model_cfg,
-                )
+                self.model = BridgeRunner(**hp)
+                self.model.load_state_dict(ckpt["state_dict"], strict=True)
             except Exception:
-                # Fallback: some checkpoints already contain all required hparams.
-                self.model = BridgeRunner.load_from_checkpoint(
-                    self.checkpoint_path,
-                    map_location=self.device,
-                )
+                self.model = BridgeRunner(**hp)
+                self.model.load_state_dict(ckpt["state_dict"], strict=False)
             self.model.to(self.device)
             self.model.eval()
             self.error = None

@@ -1,1 +1,10 @@
-brats_t1_t2/brats_t1_t2.ckpt
+brats_t1_t2/*.ckpt
+__pycache__/
+*.pyc
+.env
+.env.production
+.env.local
+.env.*.local
+.venv/
+node_modules/
+dist/
